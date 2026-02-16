@@ -1,0 +1,701 @@
+{
+  "timestamp": "2026-02-16T02:38:41.211375",
+  "test_cases": [
+    {
+      "test_case_id": "TC-WIRE-001",
+      "category": "High Value Wire Transfer",
+      "priority": "P1",
+      "description": "Detect large wire transfer from dormant account to high-risk country",
+      "preconditions": [],
+      "test_data": {
+        "amount": 45000,
+        "source_account": {
+          "id": "ACC-12345",
+          "dormant_days": 180,
+          "avg_balance": 8000
+        },
+        "destination": {
+          "country": "NG",
+          "bank": "Unknown Bank",
+          "account_name": "New Beneficiary"
+        },
+        "timestamp": "2026-02-15T03:45:00Z",
+        "device": {
+          "id": "NEW_DEVICE_001",
+          "ip": "203.0.113.45",
+          "user_agent": "Unknown"
+        }
+      },
+      "expected_result": {
+        "fraud_alert_triggered": true,
+        "risk_score": 85,
+        "alert_priority": "HIGH",
+        "action": "block_and_notify"
+      },
+      "fraud_patterns_tested": [
+        "high_value",
+        "dormant_account",
+        "high_risk_destination",
+        "new_device",
+        "unusual_time"
+      ],
+      "validation_points": [
+        "Dormant account suddenly active with large international transfer to high-risk country"
+      ]
+    },
+    {
+      "test_case_id": "TC-WIRE-002",
+      "category": "Multiple Transfers in Short Time",
+      "priority": "P1",
+      "description": "Detect multiple wire transfers in a short time frame",
+      "preconditions": [],
+      "test_data": {
+        "amount": 5000,
+        "source_account": {
+          "id": "ACC-67890",
+          "dormant_days": 0,
+          "avg_balance": 10000
+        },
+        "destination": {
+          "country": "US",
+          "bank": "Known Bank",
+          "account_name": "Existing Beneficiary"
+        },
+        "timestamp": "2026-02-15T04:00:00Z",
+        "device": {
+          "id": "KNOWN_DEVICE_001",
+          "ip": "192.0.2.1",
+          "user_agent": "Known Browser"
+        },
+        "velocity": [
+          {
+            "amount": 5000,
+            "timestamp": "2026-02-15T03:50:00Z"
+          },
+          {
+            "amount": 5000,
+            "timestamp": "2026-02-15T03:55:00Z"
+          }
+        ]
+      },
+      "expected_result": {
+        "fraud_alert_triggered": true,
+        "risk_score": 70,
+        "alert_priority": "MEDIUM",
+        "action": "review_and_notify"
+      },
+      "fraud_patterns_tested": [
+        "multiple_transfers",
+        "short_time_frame"
+      ],
+      "validation_points": [
+        "Multiple transfers in a short time frame may indicate fraud"
+      ]
+    },
+    {
+      "test_case_id": "TC-WIRE-003",
+      "category": "Low Value Wire Transfer",
+      "priority": "P3",
+      "description": "Do not detect low value wire transfer from active account",
+      "preconditions": [],
+      "test_data": {
+        "amount": 100,
+        "source_account": {
+          "id": "ACC-34567",
+          "dormant_days": 0,
+          "avg_balance": 5000
+        },
+        "destination": {
+          "country": "US",
+          "bank": "Known Bank",
+          "account_name": "Existing Beneficiary"
+        },
+        "timestamp": "2026-02-15T05:00:00Z",
+        "device": {
+          "id": "KNOWN_DEVICE_001",
+          "ip": "192.0.2.1",
+          "user_agent": "Known Browser"
+        }
+      },
+      "expected_result": {
+        "fraud_alert_triggered": false,
+        "risk_score": 0,
+        "alert_priority": "LOW",
+        "action": "allow"
+      },
+      "fraud_patterns_tested": [],
+      "validation_points": [
+        "Low value transfer from active account is likely legitimate"
+      ]
+    },
+    {
+      "test_case_id": "TC-ATO-001",
+      "category": "Multiple Failed Logins",
+      "priority": "P1",
+      "description": "Detect multiple failed logins from different devices",
+      "preconditions": [],
+      "test_data": {
+        "username": "user123",
+        "password": "password123",
+        "device": {
+          "id": "NEW_DEVICE_001",
+          "ip": "203.0.113.45",
+          "user_agent": "Unknown"
+        },
+        "login_attempts": [
+          {
+            "timestamp": "2026-02-15T06:00:00Z",
+            "device": {
+              "id": "NEW_DEVICE_001",
+              "ip": "203.0.113.45",
+              "user_agent": "Unknown"
+            }
+          },
+          {
+            "timestamp": "2026-02-15T06:05:00Z",
+            "device": {
+              "id": "NEW_DEVICE_002",
+              "ip": "203.0.113.46",
+              "user_agent": "Unknown"
+            }
+          },
+          {
+            "timestamp": "2026-02-15T06:10:00Z",
+            "device": {
+              "id": "NEW_DEVICE_003",
+              "ip": "203.0.113.47",
+              "user_agent": "Unknown"
+            }
+          }
+        ]
+      },
+      "expected_result": {
+        "fraud_alert_triggered": true,
+        "risk_score": 80,
+        "alert_priority": "HIGH",
+        "action": "block_and_notify"
+      },
+      "fraud_patterns_tested": [
+        "multiple_failed_logins",
+        "different_devices"
+      ],
+      "validation_points": [
+        "Multiple failed logins from different devices may indicate account takeover attempt"
+      ]
+    },
+    {
+      "test_case_id": "TC-ATO-002",
+      "category": "Single Failed Login",
+      "priority": "P3",
+      "description": "Do not detect single failed login from known device",
+      "preconditions": [],
+      "test_data": {
+        "username": "user123",
+        "password": "wrongpassword",
+        "device": {
+          "id": "KNOWN_DEVICE_001",
+          "ip": "192.0.2.1",
+          "user_agent": "Known Browser"
+        }
+      },
+      "expected_result": {
+        "fraud_alert_triggered": false,
+        "risk_score": 0,
+        "alert_priority": "LOW",
+        "action": "allow"
+      },
+      "fraud_patterns_tested": [],
+      "validation_points": [
+        "Single failed login from known device is likely a mistake"
+      ]
+    },
+    {
+      "test_case_id": "TC-CARD-001",
+      "category": "High Value Card Transaction",
+      "priority": "P1",
+      "description": "Detect high value card transaction from unknown device",
+      "preconditions": [],
+      "test_data": {
+        "amount": 20000,
+        "card_number": "1234567890123456",
+        "expiration_date": "2027-12-31",
+        "cvv": "123",
+        "device": {
+          "id": "NEW_DEVICE_001",
+          "ip": "203.0.113.45",
+          "user_agent": "Unknown"
+        }
+      },
+      "expected_result": {
+        "fraud_alert_triggered": true,
+        "risk_score": 85,
+        "alert_priority": "HIGH",
+        "action": "block_and_notify"
+      },
+      "fraud_patterns_tested": [
+        "high_value",
+        "unknown_device"
+      ],
+      "validation_points": [
+        "High value transaction from unknown device may indicate card fraud"
+      ]
+    },
+    {
+      "test_case_id": "TC-CARD-002",
+      "category": "Low Value Card Transaction",
+      "priority": "P3",
+      "description": "Do not detect low value card transaction from known device",
+      "preconditions": [],
+      "test_data": {
+        "amount": 10,
+        "card_number": "1234567890123456",
+        "expiration_date": "2027-12-31",
+        "cvv": "123",
+        "device": {
+          "id": "KNOWN_DEVICE_001",
+          "ip": "192.0.2.1",
+          "user_agent": "Known Browser"
+        }
+      },
+      "expected_result": {
+        "fraud_alert_triggered": false,
+        "risk_score": 0,
+        "alert_priority": "LOW",
+        "action": "allow"
+      },
+      "fraud_patterns_tested": [],
+      "validation_points": [
+        "Low value transaction from known device is likely legitimate"
+      ]
+    },
+    {
+      "test_case_id": "TC-ID-001",
+      "category": "Multiple Account Creations",
+      "priority": "P1",
+      "description": "Detect multiple account creations from same device",
+      "preconditions": [],
+      "test_data": {
+        "device": {
+          "id": "NEW_DEVICE_001",
+          "ip": "203.0.113.45",
+          "user_agent": "Unknown"
+        },
+        "account_creations": [
+          {
+            "timestamp": "2026-02-15T07:00:00Z",
+            "username": "user1"
+          },
+          {
+            "timestamp": "2026-02-15T07:05:00Z",
+            "username": "user2"
+          },
+          {
+            "timestamp": "2026-02-15T07:10:00Z",
+            "username": "user3"
+          }
+        ]
+      },
+      "expected_result": {
+        "fraud_alert_triggered": true,
+        "risk_score": 80,
+        "alert_priority": "HIGH",
+        "action": "block_and_notify"
+      },
+      "fraud_patterns_tested": [
+        "multiple_account_creations",
+        "same_device"
+      ],
+      "validation_points": [
+        "Multiple account creations from same device may indicate identity theft"
+      ]
+    },
+    {
+      "test_case_id": "TC-ID-002",
+      "category": "Single Account Creation",
+      "priority": "P3",
+      "description": "Do not detect single account creation from known device",
+      "preconditions": [],
+      "test_data": {
+        "device": {
+          "id": "KNOWN_DEVICE_001",
+          "ip": "192.0.2.1",
+          "user_agent": "Known Browser"
+        },
+        "account_creation": {
+          "timestamp": "2026-02-15T08:00:00Z",
+          "username": "user1"
+        }
+      },
+      "expected_result": {
+        "fraud_alert_triggered": false,
+        "risk_score": 0,
+        "alert_priority": "LOW",
+        "action": "allow"
+      },
+      "fraud_patterns_tested": [],
+      "validation_points": [
+        "Single account creation from known device is likely legitimate"
+      ]
+    },
+    {
+      "test_case_id": "TC-ML-001",
+      "category": "High Value Transaction to High-Risk Country",
+      "priority": "P1",
+      "description": "Detect high value transaction to high-risk country",
+      "preconditions": [],
+      "test_data": {
+        "amount": 50000,
+        "source_account": {
+          "id": "ACC-12345",
+          "dormant_days": 0,
+          "avg_balance": 10000
+        },
+        "destination": {
+          "country": "RU",
+          "bank": "Unknown Bank",
+          "account_name": "New Beneficiary"
+        },
+        "timestamp": "2026-02-15T09:00:00Z",
+        "device": {
+          "id": "NEW_DEVICE_001",
+          "ip": "203.0.113.45",
+          "user_agent": "Unknown"
+        }
+      },
+      "expected_result": {
+        "fraud_alert_triggered": true,
+        "risk_score": 85,
+        "alert_priority": "HIGH",
+        "action": "block_and_notify"
+      },
+      "fraud_patterns_tested": [
+        "high_value",
+        "high_risk_destination"
+      ],
+      "validation_points": [
+        "High value transaction to high-risk country may indicate money laundering"
+      ]
+    },
+    {
+      "test_case_id": "TC-ML-002",
+      "category": "Low Value Transaction to Low-Risk Country",
+      "priority": "P3",
+      "description": "Do not detect low value transaction to low-risk country",
+      "preconditions": [],
+      "test_data": {
+        "amount": 100,
+        "source_account": {
+          "id": "ACC-67890",
+          "dormant_days": 0,
+          "avg_balance": 5000
+        },
+        "destination": {
+          "country": "US",
+          "bank": "Known Bank",
+          "account_name": "Existing Beneficiary"
+        },
+        "timestamp": "2026-02-15T10:00:00Z",
+        "device": {
+          "id": "KNOWN_DEVICE_001",
+          "ip": "192.0.2.1",
+          "user_agent": "Known Browser"
+        }
+      },
+      "expected_result": {
+        "fraud_alert_triggered": false,
+        "risk_score": 0,
+        "alert_priority": "LOW",
+        "action": "allow"
+      },
+      "fraud_patterns_tested": [],
+      "validation_points": [
+        "Low value transaction to low-risk country is likely legitimate"
+      ]
+    }
+  ],
+  "test_results": [
+    {
+      "test_case_id": "TC-WIRE-001",
+      "status": "PASSED",
+      "actual_result": {
+        "fraud_alert_triggered": true,
+        "risk_score": 84.65,
+        "alert_priority": "HIGH",
+        "timestamp": "2026-02-16T02:38:40.104845",
+        "model_version": "2.5.0",
+        "processing_time_ms": 2631.7181335193204,
+        "fraud_indicators": [
+          "high_value",
+          "dormant_account",
+          "high_risk_destination",
+          "new_device",
+          "unusual_time"
+        ],
+        "action": "block_and_notify",
+        "confidence": 0.9420272623436836
+      },
+      "execution_time_ms": 0.03647804260253906,
+      "timestamp": "2026-02-16T02:38:40.104864",
+      "errors": [],
+      "warnings": [],
+      "performance_metrics": {
+        "response_time_ms": 0.03647804260253906,
+        "cpu_usage": 58.15722779808848,
+        "memory_mb": 443.73025014140853
+      }
+    },
+    {
+      "test_case_id": "TC-WIRE-002",
+      "status": "PASSED",
+      "actual_result": {
+        "fraud_alert_triggered": true,
+        "risk_score": 64.24,
+        "alert_priority": "MEDIUM",
+        "timestamp": "2026-02-16T02:38:40.205179",
+        "model_version": "2.5.0",
+        "processing_time_ms": 2701.143975713654,
+        "fraud_indicators": [
+          "multiple_transfers",
+          "short_time_frame"
+        ],
+        "action": "review_and_notify",
+        "confidence": 0.8599247728813864
+      },
+      "execution_time_ms": 0.050067901611328125,
+      "timestamp": "2026-02-16T02:38:40.205206",
+      "errors": [],
+      "warnings": [],
+      "performance_metrics": {
+        "response_time_ms": 0.050067901611328125,
+        "cpu_usage": 50.62001619124185,
+        "memory_mb": 261.6387150091275
+      }
+    },
+    {
+      "test_case_id": "TC-WIRE-003",
+      "status": "PASSED",
+      "actual_result": {
+        "fraud_alert_triggered": false,
+        "risk_score": 5.66,
+        "alert_priority": "LOW",
+        "timestamp": "2026-02-16T02:38:40.305481",
+        "model_version": "2.5.0",
+        "processing_time_ms": 141.57131195266413
+      },
+      "execution_time_ms": 0.03981590270996094,
+      "timestamp": "2026-02-16T02:38:40.305503",
+      "errors": [],
+      "warnings": [],
+      "performance_metrics": {
+        "response_time_ms": 0.03981590270996094,
+        "cpu_usage": 23.384811317332883,
+        "memory_mb": 259.432373314839
+      }
+    },
+    {
+      "test_case_id": "TC-ATO-001",
+      "status": "PASSED",
+      "actual_result": {
+        "fraud_alert_triggered": true,
+        "risk_score": 78.04,
+        "alert_priority": "HIGH",
+        "timestamp": "2026-02-16T02:38:40.405817",
+        "model_version": "2.5.0",
+        "processing_time_ms": 2557.9677887336434,
+        "fraud_indicators": [
+          "multiple_failed_logins",
+          "different_devices"
+        ],
+        "action": "block_and_notify",
+        "confidence": 0.8686560499752115
+      },
+      "execution_time_ms": 0.03933906555175781,
+      "timestamp": "2026-02-16T02:38:40.405840",
+      "errors": [],
+      "warnings": [],
+      "performance_metrics": {
+        "response_time_ms": 0.03933906555175781,
+        "cpu_usage": 16.9275078407504,
+        "memory_mb": 293.1230732449239
+      }
+    },
+    {
+      "test_case_id": "TC-ATO-002",
+      "status": "PASSED",
+      "actual_result": {
+        "fraud_alert_triggered": false,
+        "risk_score": 0,
+        "alert_priority": "LOW",
+        "timestamp": "2026-02-16T02:38:40.506178",
+        "model_version": "2.5.0",
+        "processing_time_ms": 3692.8752153141154
+      },
+      "execution_time_ms": 0.03814697265625,
+      "timestamp": "2026-02-16T02:38:40.506200",
+      "errors": [],
+      "warnings": [],
+      "performance_metrics": {
+        "response_time_ms": 0.03814697265625,
+        "cpu_usage": 37.93724123144413,
+        "memory_mb": 217.33989350932598
+      }
+    },
+    {
+      "test_case_id": "TC-CARD-001",
+      "status": "PASSED",
+      "actual_result": {
+        "fraud_alert_triggered": true,
+        "risk_score": 78.64,
+        "alert_priority": "HIGH",
+        "timestamp": "2026-02-16T02:38:40.606537",
+        "model_version": "2.5.0",
+        "processing_time_ms": 2190.587246777991,
+        "fraud_indicators": [
+          "high_value",
+          "unknown_device"
+        ],
+        "action": "block_and_notify",
+        "confidence": 0.9759289219597083
+      },
+      "execution_time_ms": 0.04458427429199219,
+      "timestamp": "2026-02-16T02:38:40.606561",
+      "errors": [],
+      "warnings": [],
+      "performance_metrics": {
+        "response_time_ms": 0.04458427429199219,
+        "cpu_usage": 54.57960755139249,
+        "memory_mb": 301.4965445875033
+      }
+    },
+    {
+      "test_case_id": "TC-CARD-002",
+      "status": "PASSED",
+      "actual_result": {
+        "fraud_alert_triggered": false,
+        "risk_score": 0,
+        "alert_priority": "LOW",
+        "timestamp": "2026-02-16T02:38:40.706887",
+        "model_version": "2.5.0",
+        "processing_time_ms": 855.4607402184317
+      },
+      "execution_time_ms": 0.036716461181640625,
+      "timestamp": "2026-02-16T02:38:40.706909",
+      "errors": [],
+      "warnings": [],
+      "performance_metrics": {
+        "response_time_ms": 0.036716461181640625,
+        "cpu_usage": 39.27994171832255,
+        "memory_mb": 333.59439167296546
+      }
+    },
+    {
+      "test_case_id": "TC-ID-001",
+      "status": "PASSED",
+      "actual_result": {
+        "fraud_alert_triggered": true,
+        "risk_score": 85.38,
+        "alert_priority": "HIGH",
+        "timestamp": "2026-02-16T02:38:40.807154",
+        "model_version": "2.5.0",
+        "processing_time_ms": 1499.4153266562842,
+        "fraud_indicators": [
+          "multiple_account_creations",
+          "same_device"
+        ],
+        "action": "block_and_notify",
+        "confidence": 0.9029248133672407
+      },
+      "execution_time_ms": 0.034809112548828125,
+      "timestamp": "2026-02-16T02:38:40.807173",
+      "errors": [],
+      "warnings": [],
+      "performance_metrics": {
+        "response_time_ms": 0.034809112548828125,
+        "cpu_usage": 14.761774671060554,
+        "memory_mb": 457.3771280845866
+      }
+    },
+    {
+      "test_case_id": "TC-ID-002",
+      "status": "PASSED",
+      "actual_result": {
+        "fraud_alert_triggered": false,
+        "risk_score": 0,
+        "alert_priority": "LOW",
+        "timestamp": "2026-02-16T02:38:40.907649",
+        "model_version": "2.5.0",
+        "processing_time_ms": 2463.0055838631333
+      },
+      "execution_time_ms": 0.034332275390625,
+      "timestamp": "2026-02-16T02:38:40.907670",
+      "errors": [],
+      "warnings": [],
+      "performance_metrics": {
+        "response_time_ms": 0.034332275390625,
+        "cpu_usage": 35.563116243205315,
+        "memory_mb": 234.0901488236242
+      }
+    },
+    {
+      "test_case_id": "TC-ML-001",
+      "status": "PASSED",
+      "actual_result": {
+        "fraud_alert_triggered": true,
+        "risk_score": 90.28,
+        "alert_priority": "HIGH",
+        "timestamp": "2026-02-16T02:38:41.008009",
+        "model_version": "2.5.0",
+        "processing_time_ms": 2243.4117174373823,
+        "fraud_indicators": [
+          "high_value",
+          "high_risk_destination"
+        ],
+        "action": "block_and_notify",
+        "confidence": 0.8146912774052316
+      },
+      "execution_time_ms": 0.06723403930664062,
+      "timestamp": "2026-02-16T02:38:41.008033",
+      "errors": [],
+      "warnings": [],
+      "performance_metrics": {
+        "response_time_ms": 0.06723403930664062,
+        "cpu_usage": 59.583799476066474,
+        "memory_mb": 222.14504718278695
+      }
+    },
+    {
+      "test_case_id": "TC-ML-002",
+      "status": "PASSED",
+      "actual_result": {
+        "fraud_alert_triggered": false,
+        "risk_score": 0,
+        "alert_priority": "LOW",
+        "timestamp": "2026-02-16T02:38:41.108322",
+        "model_version": "2.5.0",
+        "processing_time_ms": 1875.3101621957449
+      },
+      "execution_time_ms": 0.03600120544433594,
+      "timestamp": "2026-02-16T02:38:41.108343",
+      "errors": [],
+      "warnings": [],
+      "performance_metrics": {
+        "response_time_ms": 0.03600120544433594,
+        "cpu_usage": 25.118768467556354,
+        "memory_mb": 496.13784951030254
+      }
+    }
+  ],
+  "hallucination_checks": [],
+  "risk_assessment": {
+    "overall_risk_score": 0.0,
+    "risk_level": "LOW",
+    "detection_risk": 0.0,
+    "false_positive_risk": 0.0,
+    "compliance_risk": 0.0,
+    "system_risk": 0.0,
+    "recommendations": [
+      "\u2705 All risk metrics within acceptable ranges. System appears ready for deployment pending final approvals."
+    ]
+  },
+  "deployment_recommendation": "\u2705 APPROVED FOR DEPLOYMENT - Low risk"
+}
